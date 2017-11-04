@@ -3,7 +3,7 @@ import numpy as np
 import glob
 import QRCODE
 
-
+#Function to draw axis
 def draw(img,corners,imgpts):
 	corner=tuple(corners[0].ravel())
 	img = cv2.line(img, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
@@ -12,10 +12,12 @@ def draw(img,corners,imgpts):
 	return img
 
 
-img=cv2.imread("markerImages/IMG_6727.JPG")
-gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 #Termination criteria
 critera=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER)
+
+#read img
+img=cv2.imread("markerImages/IMG_6727.JPG")
+gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 #Initialize 3D point array.
 objp=np.zeros((12,3),dtype=np.float32)
@@ -27,37 +29,22 @@ for i,x in zip(pointList,range(0,len(pointList))):
 
 imgPoints=[]
 objPoints=[]
-#Use this function to get the marker points from the current image.
-#Append the points to the list
+
+#QRCODE.getPoints() gets the marker points from the image.
+#Append the points to the lists
 imgPoints.append(QRCODE.getPoints("markerImages/IMG_6727.JPG"))
-#imgPoints.append(QRCODE.getPoints("markerImages/TEST.JPG"))
 imgPoints.append(QRCODE.getPoints("markerImages/IMG_6720.JPG"))
 objPoints.append(objp)
-#objPoints.append(objp)
 objPoints.append(objp)
-# print imgPoints
+
+
+#calibrate the camera with the img points and the object points
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
 
-# print dist
-
-#dist=np.multiply(dist,0.00001)
-
-# print "ret is : "+str(ret)
-# print "mtx is : "+str(mtx)
-# print "dist is : "+str(dist)
-# print "rvecs are : " + str(rvecs)
-# print "tvecs are : " + str (tvecs)
-
-
-#Now for undistortion , lets see if this worked at all
-#Get height, width
 
 img2=cv2.imread('markerImages/IMG_6720.JPG')
 h,w=img2.shape[:2]
 newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
-# print newcameramtx
-# print roi
-
 
 dst = cv2.undistort(img2, mtx, dist, None, newcameramtx)
 x,y,w,h = roi
@@ -69,15 +56,21 @@ for i in xrange(len(objPoints)):
 	imgpoints2, _ = cv2.projectPoints(objPoints[i], rvecs[i], tvecs[i], mtx, dist)
 	error = cv2.norm(imgPoints[i],imgpoints2, cv2.NORM_L2)/len(imgpoints2)
 	mean_error += error
-img4=cv2.imread("markerImages/IMG_6719.JPG")
+img4=cv2.imread("markerImages/IMG_6727.JPG")
 print "total error: ", mean_error/len(objPoints)
 
 #okay now lets draw the axis
 axis = np.float32([[8.8,0,0], [0,8.8,0], [0,0,-8.8]]).reshape(-1,3)
-corners2=QRCODE.getPoints("markerImages/IMG_6719.JPG")
+corners2=QRCODE.getPoints("markerImages/IMG_6727.JPG")
+
+#getn rotation/translation vectors
 _,rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist)
 imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
+
+#draw the image
 img3 = draw(img4,corners2,imgpts)
+
+#display image
 cv2.namedWindow('img',cv2.WINDOW_NORMAL)
 cv2.imshow('img',img3)
 cv2.resizeWindow('img', 600,600)

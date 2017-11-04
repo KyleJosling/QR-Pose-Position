@@ -6,8 +6,7 @@ import numpy as np
 import imutils
 from imutils.perspective import four_point_transform
 
-#Test array
-a=np.zeros(shape=(12,3))
+
 #!
 def distance(p,q):
 	return math.sqrt(math.pow(math.fabs(p[0]-q[0]),2)+math.pow(math.fabs(p[1]-q[1]),2))
@@ -60,7 +59,6 @@ def getVertices(contours,cid,slope,quad):
 	B = (x+w,y)
 	C = (x+w,h+y)
 	D = (x,y+h)
-	print "A:" + str(A)
 	W = ((A[0]+B[0])/2,A[1])
 	X = (B[0],(B[1]+C[1])/2)
 	Y = ((C[0]+D[0])/2,C[1])
@@ -101,7 +99,6 @@ def getVertices(contours,cid,slope,quad):
 	quad.append(M1)
 	quad.append(M2)
 	quad.append(M3)
-	print quad
 	return quad
 
 #Gets called three times
@@ -150,19 +147,16 @@ def getIntersection(a1,a2,b1,b2,intersection):
 	return True,intersection
 
 def getPoints(imagePath):
-	# returnArray=np.array(,,np.int32)
-	#cap = cv2.VideoCapture(0)
-	# camera = PiCamera()
-	# camera.resolution = (640,480)
-	# camera.framerate = 32
-	# rawCapture = PiRGBArray(camera,size=(640,480))
-	time.sleep(0.1)
-	#ret, frame = cap.read()
-	image = cv2.imread(imagePath)
-	#we can crop the image here with the white coloured part
-	img = image
+
+	img = cv2.imread(imagePath)
+	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	image=cv2.GaussianBlur(gray,(5,5),0)
 	#show the image
-	edges = cv2.Canny(image,100,200)
+	edges = cv2.Canny(image,25,250)
+	cv2.namedWindow(str(imagePath),cv2.WINDOW_NORMAL)
+	cv2.imshow(str(imagePath),edges)
+	cv2.resizeWindow(str(imagePath), 600,600)
+	cv2.waitKey(0)
 	_,contours,hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	mu = []
 	mc = []
@@ -240,7 +234,6 @@ def getPoints(imagePath):
 		arearight = 0.0
 		areabottom = 0.0
 		if(top < len(contours) and right < len(contours) and bottom < len(contours) and cv2.contourArea(contours[top]) > 10 and cv2.contourArea(contours[right]) > 10 and cv2.contourArea(contours[bottom]) > 10):
-			print "hey"
 			tempL = []
 			tempM = []
 			tempO = []
@@ -258,29 +251,18 @@ def getPoints(imagePath):
 			src.append(N)
 			src.append(O[3])
 			src = np.asarray(src,np.float32)
-			warped =four_point_transform(img,src)
-			cv2.imshow("warped",warped)
-			cv2.circle(img,N,1,(0,0,255),50)
+			warped =four_point_transform(image,src)
+			#cv2.imshow("warped",warped)
+			#cv2.circle(img,N,1,(0,0,255),50)
 			cv2.drawContours(img,contours,top,(255,0,0),2)
 			cv2.drawContours(img,contours,right,(0,255,0),2)
 			cv2.drawContours(img,contours,bottom,(0,0,255),2)
-			warped = cv2.cvtColor(warped,cv2.COLOR_BGR2GRAY)
-		#Blue top left corner
-		print str(L)
-		#Green top right corner
-		#print str(M)
-		#Red bottom left cornerq
-		# print O
-		# print L
-		#returnArray=np.zeros((12,1,2))
+
 		returnArray=np.zeros((12,2),dtype=np.float32)
 		returnArray[0:4]=L
 		returnArray[4:8]=M
 		returnArray[8:12]=O
-		#print returnArray.shape
 		returnArray=np.expand_dims(returnArray,axis=1)
-		#print returnArray.shape
-		#print returnArray
 		cv2.namedWindow(str(imagePath),cv2.WINDOW_NORMAL)
 		cv2.imshow(str(imagePath),img)
 		cv2.resizeWindow(str(imagePath), 600,600)
