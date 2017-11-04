@@ -1,9 +1,6 @@
-import argparse
-import time
 import cv2
 import math
 import numpy as np
-import imutils
 from imutils.perspective import four_point_transform
 
 
@@ -268,5 +265,4 @@ def getPoints(imagePath):
 		cv2.resizeWindow(str(imagePath), 600,600)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
-		#returnArray=np.array(,,np.int32)
 		return returnArray
