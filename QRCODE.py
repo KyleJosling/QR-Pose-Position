@@ -60,6 +60,7 @@ def getVertices(contours,cid,slope,quad):
 	B = (x+w,y)
 	C = (x+w,h+y)
 	D = (x,y+h)
+	print "A:" + str(A)
 	W = ((A[0]+B[0])/2,A[1])
 	X = (B[0],(B[1]+C[1])/2)
 	Y = ((C[0]+D[0])/2,C[1])
@@ -100,6 +101,7 @@ def getVertices(contours,cid,slope,quad):
 	quad.append(M1)
 	quad.append(M2)
 	quad.append(M3)
+	print quad
 	return quad
 
 #Gets called three times
@@ -157,6 +159,7 @@ def getPoints(imagePath):
 	time.sleep(0.1)
 	#ret, frame = cap.read()
 	image = cv2.imread(imagePath)
+	#we can crop the image here with the white coloured part
 	img = image
 	#show the image
 	edges = cv2.Canny(image,100,200)
@@ -237,6 +240,7 @@ def getPoints(imagePath):
 		arearight = 0.0
 		areabottom = 0.0
 		if(top < len(contours) and right < len(contours) and bottom < len(contours) and cv2.contourArea(contours[top]) > 10 and cv2.contourArea(contours[right]) > 10 and cv2.contourArea(contours[bottom]) > 10):
+			print "hey"
 			tempL = []
 			tempM = []
 			tempO = []
@@ -248,7 +252,6 @@ def getPoints(imagePath):
 			L = updateCornerOr(orientation,tempL)
 			M = updateCornerOr(orientation,tempM)
 			O = updateCornerOr(orientation,tempO)
-
 			iflag,N = getIntersection(M[1],M[2],O[3],O[2],N)
 			src.append(L[0])
 			src.append(M[1])
@@ -265,22 +268,22 @@ def getPoints(imagePath):
 		#Blue top left corner
 		print str(L)
 		#Green top right corner
-		print str(M)
+		#print str(M)
 		#Red bottom left cornerq
-		print O
-		print L
+		# print O
+		# print L
 		#returnArray=np.zeros((12,1,2))
 		returnArray=np.zeros((12,2),dtype=np.float32)
 		returnArray[0:4]=L
 		returnArray[4:8]=M
 		returnArray[8:12]=O
-		print returnArray.shape
+		#print returnArray.shape
 		returnArray=np.expand_dims(returnArray,axis=1)
-		print returnArray.shape
-		print returnArray
-		cv2.namedWindow('rect',cv2.WINDOW_NORMAL)
-		cv2.imshow('rect',img)
-		cv2.resizeWindow('rect', 600,600)
+		#print returnArray.shape
+		#print returnArray
+		cv2.namedWindow(str(imagePath),cv2.WINDOW_NORMAL)
+		cv2.imshow(str(imagePath),img)
+		cv2.resizeWindow(str(imagePath), 600,600)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 		#returnArray=np.array(,,np.int32)
