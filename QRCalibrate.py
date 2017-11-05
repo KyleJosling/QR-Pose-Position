@@ -33,7 +33,7 @@ objPoints=[]
 #QRCODE.getPoints() gets the marker points from the image.
 #Append the points to the lists
 imgPoints.append(QRCODE.getPoints("markerImages/IMG_6727.JPG"))
-imgPoints.append(QRCODE.getPoints("markerImages/IMG_6720.JPG"))
+#imgPoints.append(QRCODE.getPoints("markerImages/IMG_6725.JPG"))
 objPoints.append(objp)
 objPoints.append(objp)
 

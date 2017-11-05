@@ -143,23 +143,23 @@ def getIntersection(a1,a2,b1,b2,intersection):
 	intersection = (int(p[0]+(t*r[0])),int(p[1]+(t*r[1])))
 	return True,intersection
 
-def getPoints(imagePath):
+def getPoints(imagePath,dispContour=-1):
 
 	img = cv2.imread(imagePath)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	image=cv2.GaussianBlur(gray,(5,5),0)
+	image=cv2.GaussianBlur(gray,(3,7),0)
 	#show the image
-	edges = cv2.Canny(image,25,250)
-	cv2.namedWindow(str(imagePath),cv2.WINDOW_NORMAL)
-	cv2.imshow(str(imagePath),edges)
-	cv2.resizeWindow(str(imagePath), 600,600)
-	cv2.waitKey(0)
+	edges = cv2.Canny(image,10,200)
 	_,contours,hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	#IDEA- the first contour is the outside of the paper. is there some way to discard this one?
+	#cv2.drawContours(img, contours, dispContour, (0,255,0), 6)
+	#cv2.drawContours(img, contours, 1, (0,0,255), 3)
 	mu = []
 	mc = []
 	mark = 0
 	for x in range(0,len(contours)):
 		mu.append(cv2.moments(contours[x]))
+
 
 	for m in mu:
 		if m['m00'] != 0:
@@ -167,15 +167,25 @@ def getPoints(imagePath):
 		else:
 			mc.append((0,0))
 
+	#hierarchy array [A,B,x,x] where A is current contour ID and B is nested child
+	#B=-1 if there is no nested child
+	#Find three repeatedly enclosed contours, A,B,C
 	for x in range(0,len(contours)):
 		k = x
 		c = 0
+		# print "Hierarchy outer contour: "
+		# print hierarchy[0][k][3]
+		#while the hierarchy does not equal -1 (There is still a child inside)
 		while(hierarchy[0][k][2] != -1):
+			#set k to child in the hierarchy
 			k = hierarchy[0][k][2]
-			c = c + 1
+			c += 1
+			#print k
 		if hierarchy[0][k][2] != -1:
-			c = c + 1
+			c +=1
 
+
+		#We expect 5 nested contours in each corner box
 		if c >= 5:
 			if mark == 0:
 				A = x
@@ -248,9 +258,6 @@ def getPoints(imagePath):
 			src.append(N)
 			src.append(O[3])
 			src = np.asarray(src,np.float32)
-			warped =four_point_transform(image,src)
-			#cv2.imshow("warped",warped)
-			#cv2.circle(img,N,1,(0,0,255),50)
 			cv2.drawContours(img,contours,top,(255,0,0),2)
 			cv2.drawContours(img,contours,right,(0,255,0),2)
 			cv2.drawContours(img,contours,bottom,(0,0,255),2)
