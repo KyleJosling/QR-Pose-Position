@@ -143,17 +143,26 @@ def getIntersection(a1,a2,b1,b2,intersection):
 	intersection = (int(p[0]+(t*r[0])),int(p[1]+(t*r[1])))
 	return True,intersection
 
-def getPoints(imagePath,dispContour=-1):
+def getPoints(imagePath,G1=3,G2=7):
 
+	#Return variables, success and array of points
+	success=0
+	returnArray=np.zeros((12,2),dtype=np.float32)
+
+	#we load the image and convert it to gray
 	img = cv2.imread(imagePath)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	image=cv2.GaussianBlur(gray,(3,7),0)
-	#show the image
-	edges = cv2.Canny(image,10,200)
+
+	#Gaussian blur based on input parameters
+	gParameters=tuple((G1,G2))
+	image=cv2.GaussianBlur(gray,gParameters,0)
+
+	#detect the edges using Canny, get the contours with tree hierarchy
+	edges = cv2.Canny(image,15,200)
 	_,contours,hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	#IDEA- the first contour is the outside of the paper. is there some way to discard this one?
-	#cv2.drawContours(img, contours, dispContour, (0,255,0), 6)
-	#cv2.drawContours(img, contours, 1, (0,0,255), 3)
+
+	#Moment arrays
 	mu = []
 	mc = []
 	mark = 0
@@ -167,20 +176,18 @@ def getPoints(imagePath,dispContour=-1):
 		else:
 			mc.append((0,0))
 
-	#hierarchy array [A,B,x,x] where A is current contour ID and B is nested child
-	#B=-1 if there is no nested child
+	#hierarchy array [0][A][B] where A is current contour ID
+	#B is 2 for data about children
 	#Find three repeatedly enclosed contours, A,B,C
 	for x in range(0,len(contours)):
 		k = x
 		c = 0
-		# print "Hierarchy outer contour: "
-		# print hierarchy[0][k][3]
+
 		#while the hierarchy does not equal -1 (There is still a child inside)
 		while(hierarchy[0][k][2] != -1):
-			#set k to child in the hierarchy
+			#set k to child in the hierarchy, add one to #of children
 			k = hierarchy[0][k][2]
 			c += 1
-			#print k
 		if hierarchy[0][k][2] != -1:
 			c +=1
 
@@ -262,7 +269,6 @@ def getPoints(imagePath,dispContour=-1):
 			cv2.drawContours(img,contours,right,(0,255,0),2)
 			cv2.drawContours(img,contours,bottom,(0,0,255),2)
 
-		returnArray=np.zeros((12,2),dtype=np.float32)
 		returnArray[0:4]=L
 		returnArray[4:8]=M
 		returnArray[8:12]=O
@@ -272,4 +278,5 @@ def getPoints(imagePath,dispContour=-1):
 		cv2.resizeWindow(str(imagePath), 600,600)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
-		return returnArray
+		success=1
+	return returnArray,success
