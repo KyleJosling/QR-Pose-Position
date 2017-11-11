@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import glob
 import QRCODE
+import math
 
 #Function to draw axis
 def draw(img,corners,imgpts):
@@ -71,7 +72,11 @@ for fname in images:
 #calibrate the camera with the img points and the object points
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
 
-img2=cv2.imread('markerImages/IMG_6719.JPG')
+#Write to file
+np.savez('iPhoneCam.npz',mtx=mtx,dist=dist,rvecs=rvecs,tvecs=tvecs)
+
+
+img2=cv2.imread('markerImages/IMG_6723.JPG')
 h,w=img2.shape[:2]
 newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 
@@ -89,12 +94,32 @@ print "total error: ", mean_error/len(objPoints)
 
 #okay now lets draw the axis
 axis = np.float32([[8.8,0,0], [0,8.8,0], [0,0,-8.8]]).reshape(-1,3)
-corners2,meep=QRCODE.getPoints('markerImages/IMG_6719.JPG')
+corners2,meep=QRCODE.getPoints('markerImages/IMG_6723.JPG')
 print corners2
 
 #getn rotation/translation vectors
-_,rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist)
+#TODO- look into using solvePnP instead of solvePnPRansac
+#_,rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist,flags=cv2.SOLVEPNP_ITERATIVE)
+print rvecs
+print tvecs
+retval,rvecs,tvecs=cv2.solvePnP(objp,corners2,mtx,dist,flags=cv2.SOLVEPNP_ITERATIVE)
 imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
+
+#Convert the rotation matrix to a rotation matrix
+rotationMat=cv2.Rodrigues(rvecs)[0]
+
+#camera position
+cam_pos=(-np.matrix(rotationMat).T)*np.matrix(tvecs)
+print cam_pos
+
+#create the projection matrix
+projMat=np.hstack((rotationMat,tvecs))
+
+#Now get the angles
+euler_angles_radians=-cv2.decomposeProjectionMatrix(projMat)[6]
+euler_angles_degrees=(180*euler_angles_radians)/math.pi
+
+print "Angle:" +str (euler_angles_degrees)
 
 #draw the image
 img3 = draw(img2,corners2,imgpts)
