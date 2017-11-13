@@ -1,132 +1,69 @@
 import cv2
 import numpy as np
 import glob
-import QRCODE
-import math
+import QRPoints
 
-#Function to draw axis
-def draw(img,corners,imgpts):
-	corner=tuple(corners[0].ravel())
-	img = cv2.line(img, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
-	img = cv2.line(img, corner, tuple(imgpts[1].ravel()), (0,255,0), 5)
-	img = cv2.line(img, corner, tuple(imgpts[2].ravel()), (0,0,255), 5)
-	return img
+#This program calibrates the camera using the images given.
 
-images=glob.glob('testImages/*.JPG')
+#read images
+images=glob.glob('markerImages/*.JPG')
 
 #Termination criteria
-critera=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER)
-
-#read img
-img=cv2.imread("markerImages/IMG_6727.JPG")
-gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,30,0.001)
 
 #Initialize 3D point array.
-objp=np.zeros((12,3),dtype=np.float32)
+objp=np.zeros((6,3),dtype=np.float32)
+
 #List of points in the pattern.png image. Coordinates correspond to cm.
-pointList=[[0,0,0],[2.464,0,0],[2.464,2.464,0],[0,2.464,0],[6.336,0,0],[8.8,0,0],[8.8,2.464,0],[6.336,2.464,0],[0,6.336,0],[2.464,6.336,0],[2.464,8.8,0],[0,8.8,0]]
+#These are object points so they are three dimensional, z always being 0
+pointList=[[0,0,0],[2.464,2.464,0],[0,8.8,0],[2.464,6.336,0],[8.8,0,0],[6.336,2.464,0]]
+
 #Append the points to 3D point array
 for i,x in zip(pointList,range(0,len(pointList))):
 	objp[x]=i
 
 
-imgPoints=[]
-objPoints=[]
+#These lists store the points in the 2D image and the corresponding points on
+#the object
+imgPointsList=[]
+objPointsList=[]
 
 
 #QRCODE.getPoints() gets the marker points from the image.
 #Append the points to the lists
-#TODO- make a hash table with each image and the corresponding array points
-#So you don't have to recalculate them
 for fname in images:
 	print fname
 	#read an image
 	image=cv2.imread(fname)
-
-	#set lower and upper bounds to filter out background
-	lower=np.array([180,180,180],dtype='uint8')
-	upper=np.array([255,255,255],dtype='uint8')
-
-	#Remove anything that isnt white from image.
-	mask=cv2.inRange(image,lower,upper)
-	output=cv2.bitwise_and(image,image,mask=mask)
-
-	#TODO-make it so you don't have to write the image before sending it to getPoints
-	cv2.imwrite('whiteOnly.JPG',output)
+	gray=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
 
 	#Get the corner points
-	points,success=QRCODE.getPoints('whiteOnly.JPG')
-
-	#TODO- fix the detector so it works with all the images. seriously
+	points,success=QRPoints.getPoints(fname)
 
 	#If the function isn't successful
-	if not success or fname=='testImages/IMG_6723.JPG':
-		#Try again and add points to imgPoints array
-		points,success=QRCODE.getPoints('whiteOnly.JPG',7,3)
-		imgPoints.append(points)
-		objPoints.append(objp)
+	if not success:
+		#Try again and add points to imgPointsList array
+		points,success=QRPoints.getPoints(fname,7,3)
+		cv2.cornerSubPix(gray,points,(11,11),(-1,-1),criteria)
+		imgPointsList.append(points)
+		objPointsList.append(objp)
 	else:
-		imgPoints.append(points)
-		objPoints.append(objp)
+		cv2.cornerSubPix(gray,points,(11,11),(-1,-1),criteria)
+		imgPointsList.append(points)
+		objPointsList.append(objp)
 
 #calibrate the camera with the img points and the object points
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPointsList, imgPointsList, gray.shape[::-1],None,None)
 
 #Write to file
-np.savez('iPhoneCam.npz',mtx=mtx,dist=dist,rvecs=rvecs,tvecs=tvecs)
+np.savez('iPhoneCam2.npz',mtx=mtx,dist=dist,rvecs=rvecs,tvecs=tvecs)
 
-
-img2=cv2.imread('markerImages/IMG_6723.JPG')
-h,w=img2.shape[:2]
-newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
-
-dst = cv2.undistort(img2, mtx, dist, None, newcameramtx)
-x,y,w,h = roi
-dst = dst[y:y+h, x:x+w]
-cv2.imwrite('calibresult.png',dst)
-
+#Find the projection error
 mean_error = 0
-for i in xrange(len(objPoints)):
-	imgpoints2, _ = cv2.projectPoints(objPoints[i], rvecs[i], tvecs[i], mtx, dist)
-	error = cv2.norm(imgPoints[i],imgpoints2, cv2.NORM_L2)/len(imgpoints2)
+for i in xrange(len(objPointsList)):
+	imgpoints2, _ = cv2.projectPoints(objPointsList[i], rvecs[i], tvecs[i], mtx, dist)
+	print imgpoints2.shape
+	print imgPointsList[i].shape
+	error = cv2.norm(imgPointsList[i],imgpoints2, cv2.NORM_L2)/len(imgpoints2)
 	mean_error += error
-print "total error: ", mean_error/len(objPoints)
-
-#okay now lets draw the axis
-axis = np.float32([[8.8,0,0], [0,8.8,0], [0,0,-8.8]]).reshape(-1,3)
-corners2,meep=QRCODE.getPoints('markerImages/IMG_6723.JPG')
-print corners2
-
-#getn rotation/translation vectors
-#TODO- look into using solvePnP instead of solvePnPRansac
-#_,rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners2, mtx, dist,flags=cv2.SOLVEPNP_ITERATIVE)
-print rvecs
-print tvecs
-retval,rvecs,tvecs=cv2.solvePnP(objp,corners2,mtx,dist,flags=cv2.SOLVEPNP_ITERATIVE)
-imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
-
-#Convert the rotation matrix to a rotation matrix
-rotationMat=cv2.Rodrigues(rvecs)[0]
-
-#camera position
-cam_pos=(-np.matrix(rotationMat).T)*np.matrix(tvecs)
-print cam_pos
-
-#create the projection matrix
-projMat=np.hstack((rotationMat,tvecs))
-
-#Now get the angles
-euler_angles_radians=-cv2.decomposeProjectionMatrix(projMat)[6]
-euler_angles_degrees=(180*euler_angles_radians)/math.pi
-
-print "Angle:" +str (euler_angles_degrees)
-
-#draw the image
-img3 = draw(img2,corners2,imgpts)
-
-#display image
-cv2.namedWindow('img',cv2.WINDOW_NORMAL)
-cv2.imshow('img',img3)
-cv2.resizeWindow('img', 600,600)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+print "total error: ", mean_error/len(objPointsList)
