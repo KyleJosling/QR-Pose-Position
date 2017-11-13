@@ -5,7 +5,7 @@ import math
 import QRPoints
 
 #Load npz file with camera calibration parameters
-with np.load('iPhoneCam2.npz') as X:
+with np.load('iPhoneCam.npz') as X:
 	mtx,dist,_,_=[X[i] for i in('mtx','dist','rvecs','tvecs')]
 
 print mtx
@@ -18,7 +18,6 @@ criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER)
 objectPoints=np.zeros((6,3),dtype=np.float32)
 
 #List points in the pattern.png image. The coordinates correspond to cm
-#pointList=[[0,0,0],[2.464,0,0],[2.464,2.464,0],[0,2.464,0],[6.336,0,0],[8.8,0,0],[8.8,2.464,0],[6.336,2.464,0],[0,6.336,0],[2.464,6.336,0],[2.464,8.8,0],[0,8.8,0]]
 pointList=[[0,0,0],[2.464,2.464,0],[0,8.8,0],[2.464,6.336,0],[8.8,0,0],[6.336,2.464,0]]
 
 #Axis to draw on the image later. Axis will be as long as the QRCode
