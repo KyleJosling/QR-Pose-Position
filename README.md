@@ -31,5 +31,5 @@ QRPoints gets points on the corners of the three squares in the QR Code. The tec
 4. Get rotation matrix from rotation vectors using cv2.Rodrigues()
 5. Decompose rotation matrix into yaw, pitch and roll angles
 
-Yaw, pitch and roll follow the aircraft principle axes and the right hand rule. Also please note that the blue axis is the X axis, green is the Y axis and red is the Z axis. The X,Y,Z coordinates are in cm. 
+Yaw, pitch and roll follow the aircraft principle axes and the right hand rule. Also please note that the blue axis is the x axis, green is the y axis and red is the z axis. The x,y,z coordinates are in cm. 
 
