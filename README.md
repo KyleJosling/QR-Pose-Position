@@ -26,6 +26,6 @@ QRPoints gets points on the corners of the three squares in the QR Code. The tec
 
 1. Load calibration parameters
 2. Find image points in QR Code using QRPoints.py, use solvePnP to get rotation vectors
-3. Draw axis on image. 
+3. Draw axis on image
 4. Get rotation from rvecs using cv2.Rodrigues()
-5. Decompose rotation matrix into yaw, pitch and roll angles. Yaw, pitch and roll follow the aircraft principle axis.
+5. Decompose rotation matrix into yaw, pitch and roll angles. Yaw, pitch and roll follow the aircraft principle axis
