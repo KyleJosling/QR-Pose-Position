@@ -30,11 +30,9 @@ def getSquarePoints(points,center):
 def distance(p,q):
 	return math.sqrt(math.pow(math.fabs(p[0]-q[0]),2)+math.pow(math.fabs(p[1]-q[1]),2))
 
-#Gets the height of the triangle formed by all three squares.
+#Gets the height of the triangle formed by all three squares using some trig
 #Can return a negative height, this is how we find the orientation of the corners
-#TODO- find better variable names
 def triangleHeight(l,m,j):
-	#TODO- use slope function instead
 	a = -((m[1] - l[1])/(m[0] - l[0]))
 	b = 1.0
 	c = (((m[1] - l[1])/(m[0] - l[0]))*l[0]) - l[1]
@@ -99,7 +97,8 @@ def findCornerOr(centers):
 	elif ang==0:
 		bottom=median1
 		right=median2
-
+		
+	#Return the index of the outlier, bottom and right square
 	return outlier,bottom,right
 
 #Function returns all the points found in each of the three corner squares
