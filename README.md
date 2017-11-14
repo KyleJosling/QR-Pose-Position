@@ -7,7 +7,7 @@ You can assume that the pattern is at 0,0,0 in some global coordinate system and
 
 <h2> Approach </h2>
 
-<h3> QRPoints </h3>
+<h3> QRPoints.py </h3>
 
 QRPoints gets points on the corners of the three squares in the QR Code. The technique is as follows:
 
@@ -15,17 +15,18 @@ QRPoints gets points on the corners of the three squares in the QR Code. The tec
 2. Detect contours, find the squares in the QR Code by comparing contour areas
 3. Return image points on corners of squares
 
-<h3> Calibration </h3>
+<h3> Calibration (QRCalibrate.py) </h3>
 
 1. QRPoints.py gets certain image points on the QR Code 
 2. Used image points to calibrate the camera with a set of corresponding object points, that are predefined based on the size of the pattern
 3. Use calibrate camera with object points and image points
 4. Saved calibration parameters as npz file
 
-<h3> Getting Pose and Position </h3>
+<h3> Getting Pose and Position (visualize.py) </h3>
 
 1. Load calibration parameters
 2. Find image points in QR Code using QRPoints.py, use solvePnP to get rotation vectors
 3. Draw axis on image
 4. Get rotation from rvecs using cv2.Rodrigues()
 5. Decompose rotation matrix into yaw, pitch and roll angles. Yaw, pitch and roll follow the aircraft principle axis
+
