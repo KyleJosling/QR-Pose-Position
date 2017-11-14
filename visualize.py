@@ -8,9 +8,6 @@ import QRPoints
 with np.load('iPhoneCam.npz') as X:
 	mtx,dist,_,_=[X[i] for i in('mtx','dist','rvecs','tvecs')]
 
-print mtx
-print dist
-
 #Criteria
 criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER)
 
@@ -23,7 +20,7 @@ pointList=[[0,0,0],[2.464,2.464,0],[0,8.8,0],[2.464,6.336,0],[8.8,0,0],[6.336,2.
 #Axis to draw on the image later. Axis will be as long as the QRCode
 axis = np.float32([[8.8,0,0], [0,8.8,0], [0,0,-8.8]]).reshape(-1,3)
 
-#Drawing function
+#This function draws the axis on the QR Code
 def draw(img,corners,imgpts):
 	corner=tuple(corners[0].ravel())
 	img = cv2.line(img, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
@@ -84,7 +81,8 @@ for fname in images:
 	cv2.putText(image,("Yaw: " + str(round(yaw,2))),(10,650),font,4,(255,255,255),2,cv2.LINE_AA)
 	cv2.putText(image,("Pitch: " + str(round(pitch,2))),(10,800),font,4,(255,255,255),2,cv2.LINE_AA)
 	cv2.putText(image,("Roll: " + str(round(roll,2))),(10,950),font,4,(255,255,255),2,cv2.LINE_AA)
-
+	
+	#Display image, resize
 	cv2.namedWindow('img',cv2.WINDOW_NORMAL)
 	cv2.imshow('img',image)
 	cv2.resizeWindow('img',600,600)
