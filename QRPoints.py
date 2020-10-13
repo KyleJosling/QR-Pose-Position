@@ -128,7 +128,7 @@ def getPoints(imagePath,G1=3,G2=5):
 	edges=cv2.Canny(img,10,400)
 
 	#Get contours,hierarchy
-	_,contours,hierarchy=cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	contours,hierarchy=cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	bContourArea=cv2.contourArea(contours[0])
 
 	#Compute the center of the big contour for later
